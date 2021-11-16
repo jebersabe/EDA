@@ -14,6 +14,7 @@ Import data set and libraries:
 ```{r message=FALSE}
 library(dplyr)
 library(skimr)
+library(ggplot2)
 
 data <- readr::read_csv("train.csv")
 glimpse(data)
@@ -50,14 +51,24 @@ data_preprocessed %>%
   summarise(Count = n(), MedianIncome = median(ApplicantIncome))
 ```
 
->Surprisingly, *applicants who are ineligible for loan have higher average income* than eligible applicants.   
+```{r}
+data_preprocessed %>% 
+  group_by(Loan_Status) %>% 
+  summarise(Count = n(), MedianIncome = median(ApplicantIncome)) %>% 
+  ggplot(aes(x = Loan_Status, y = MedianIncome))+
+  geom_col(fill = c("#F8766D", "#00BFC4"), alpha = 0.9)+
+  geom_text(aes(label=MedianIncome), vjust = -0.5)+
+  theme_minimal()
+```
+
+>There is not much difference in the median income of both groups.  
 
 ### 2. Do applicants with less payment-to-income ratio more likely to be eligible for loan?  
 ```{r warning=FALSE}
 library(ggplot2)
 data_preprocessed %>% 
   ggplot(aes(PaymentIncomeRatio, fill = Loan_Status))+
-  geom_density(alpha  = 0.4)
+  geom_density(alpha  = 0.7)
 ```
 
 
@@ -77,31 +88,36 @@ data_preprocessed %>%
   summarise(Count = n(), MedianPayIncomeRatio = median(PaymentIncomeRatio, na.rm=T))
 ```
 
-There is not much difference in medians between the two groups.   
+>There is not much difference in medians between the two groups.   
 
 
 ### 3. Is there a difference in the income of applicants who graduated and those who did not?  
 ```{r}
 library(ggplot2)
 
+# Filtering values greater than 15000 to remove zoom of the outliers and zoom in on the distribution
 data_preprocessed %>% 
-  ggplot(aes(x = (ApplicantIncome), fill = Education))+
-  geom_density(alpha = 0.5)
-
-data_preprocessed %>% 
-  ggplot(aes(x = log(ApplicantIncome), fill = Education))+
-  geom_density(alpha = 0.5)
+  filter(ApplicantIncome < 15000) %>% 
+  ggplot(aes(y = ApplicantIncome, x = Education, fill = Education))+
+  geom_boxplot(alpha = 0.5)
 
 ```
 
->The median for the income of both groups are approximately the same.  
+```{r}
+data_preprocessed %>% 
+  group_by(Education) %>% 
+  summarise(MedianApplicantIncome = median(ApplicantIncome))
+```
+
+
+>Graduate applicants have higher median income.  
 
 ### 4. Do self-employed applicants have lower income?  
 ```{r}
 data_preprocessed %>% 
-  filter(Self_Employed != "") %>% 
+  filter(Self_Employed != "" & ApplicantIncome < 30000) %>% 
   ggplot(aes(ApplicantIncome, fill = Self_Employed))+
-  geom_density(alpha  = 0.5)
+  geom_density(alpha  = 0.6)
 ```
 
 ```{r}
@@ -113,11 +129,21 @@ data_preprocessed %>%
 
 >Self-employed applicants actually have higher median income.  
 
-### 5. Are applicants with low monthly payment more likely to be eligible for loan?   
+### 5. Are applicants with low monthly payment are more likely to be eligible for loan?   
 ```{r}
 data_preprocessed %>% 
   group_by(Loan_Status) %>% 
   summarise(Count = n(), MedianMonthlyPayment = median(MonthlyPayment, na.rm = T))
+```
+
+```{r}
+data_preprocessed %>% 
+  group_by(Loan_Status) %>% 
+  summarise(Count = n(), MedianMonthlyPayment = median(MonthlyPayment, na.rm = T) %>% round(1)) %>% 
+  ggplot(aes(Loan_Status, MedianMonthlyPayment))+
+  geom_col(fill = c("#F8766D", "#00BFC4"), alpha = 0.85)+
+  geom_text(aes(label=MedianMonthlyPayment), vjust = -0.5)+
+  theme_minimal()
 ```
 
 >Eligible applicants have lower median monthly payment.  
@@ -126,7 +152,8 @@ data_preprocessed %>%
 ```{r warning=FALSE}
 data_preprocessed %>% 
   ggplot(aes(y = ApplicantIncome, x = Dependents, fill = factor(Dependents)))+
-  geom_boxplot(alpha = 0.4)
+  geom_boxplot(alpha = 0.5)+
+  scale_fill_brewer(palette="Set1")
 ```
 
 ```{r}
@@ -153,7 +180,8 @@ data_preprocessed %>%
   mutate(Dependents = if_else(Dependents > 0, 1,  0)) %>% 
   count(Married, Dependents) %>% 
   ggplot(aes(x = Married, y = n, fill = factor(Dependents)))+
-  geom_col()
+  geom_col(alpha = 0.9)+
+  theme_minimal()
 ```
 
 >Majority of married applicants have dependents; however, married applicants who don't have dependents still hold a big percentage. Majority of unmarried applicants don't have dependents.  
@@ -163,7 +191,7 @@ data_preprocessed %>%
   filter(Married == "No" & Dependents != "") %>% 
   mutate(Dependents = if_else(Dependents > 0, 1,  0)) %>% 
   count(Married, Dependents) %>% 
-  mutate(Percentage = n*100/sum(n))
+  mutate(Percentage = round(n*100/sum(n),1))
 ```
 
 ### 8. Loan Amount and Applicant Income  
@@ -185,7 +213,8 @@ data_preprocessed <- data_preprocessed %>%
 ```{r}
 data_preprocessed %>% 
   ggplot(aes(y=ApplicantIncome, x=ApplicantIncomeCluster))+
-  geom_boxplot(aes(fill = ApplicantIncomeCluster), alpha = 0.4)
+  geom_boxplot(aes(fill = ApplicantIncomeCluster), alpha = 0.4)+
+  scale_fill_brewer(palette="Set1")
 ```
 
 The graph below shows that the kmeans algorithm cleanly clustered the applicants income. 
@@ -193,15 +222,17 @@ The graph below shows that the kmeans algorithm cleanly clustered the applicants
 ```{r}
 data_preprocessed %>% 
   ggplot(aes(x=Loan_ID, y=ApplicantIncome, color = ApplicantIncomeCluster))+
-  geom_point(size = 3, alpha = 0.5)+
-  theme_void()
+  geom_point(size = 3, alpha = 0.9)+
+  theme_void()+
+  scale_color_brewer(palette="Set1")
 ```
 
 
 ```{r warning=F}
 data_preprocessed %>% 
   ggplot(aes(x = ApplicantIncome, y = LoanAmount, color=ApplicantIncomeCluster))+
-  geom_point(alpha = 0.7, size = 3)
+  geom_point(alpha = 0.8, size = 3)+
+  scale_color_brewer(palette="Set1")
 ```
 
 >Clusters 2 and 3 of applicant income have greater range of loan amount than cluster 1 applicants. 
@@ -212,11 +243,27 @@ data_preprocessed %>%
 ### 9. Applicants with higher income pay the loan in shorter term
 ```{r warning=FALSE}
 data_preprocessed %>% 
-  ggplot(aes(Loan_Amount_Term))+
-  geom_density(aes(fill = ApplicantIncomeCluster), alpha =  0.6)
+  filter(!is.na(Loan_Amount_Term)) %>% 
+  mutate(Loan_Amount_Term = forcats::fct_lump_n(factor(Loan_Amount_Term), 4)) %>% 
+  #mutate(Loan_Amount_Term  = factor(Loan_Amount_Term)) %>% 
+  ggplot(aes(Loan_Amount_Term, fill = ApplicantIncomeCluster))+
+  geom_bar(stat = "count", position = "stack", alpha = 0.9)+
+  scale_fill_brewer(palette="Set1")+
+  theme_minimal()
+
 ```
 
->The loan amount term distribution is similar across all applicant income clusters --- peaking at 360 and 180 months.   
+```{r}
+data_preprocessed %>% 
+  filter(!is.na(Loan_Amount_Term)) %>% 
+  mutate(Loan_Amount_Term = forcats::fct_lump_n(factor(Loan_Amount_Term), 4)) %>% 
+  group_by(Loan_Amount_Term, ApplicantIncomeCluster) %>% 
+  count(sort = T) %>% 
+  arrange(Loan_Amount_Term)
+```
+
+
+>360-month is the favorite loan amoun term across all income clusters.  
 
 ### 10. Are most of the applicants with zero co-applicant income unmarried?  
 ```{r}
@@ -246,4 +293,6 @@ data_preprocessed %>%
   geom_boxplot(alpha = 0.5)
 ```
 
->Apparently, males have slightly higher income than females.  
+>Apparently, males have slightly higher income than females and male income distribution has wider range.    
+
+
