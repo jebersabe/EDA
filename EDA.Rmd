@@ -13,19 +13,20 @@ output:
     toc_float: true
 ---
 
-Import data set and libraries:   
+### Import data set and libraries   
 ```{r message=FALSE, warning=FALSE}
-library(dplyr)
-library(skimr)
+library(dplyr) 
+library(skimr) 
 library(ggplot2)
-library(printr)
+library(printr) # for tidy tabulations
 
 data <- readr::read_csv("train.csv")
 glimpse(data)
 skim(data)
 ```
+We have a total of 614 records and 13 columns. We also have some missing values and the numeric variables are not distributed normally.   
 
-
+Let's add some columns which banks use to evaluate the eligibility of loan applicants.  
 
 ```{r}
 
@@ -41,11 +42,10 @@ monthly_payment <- function(loan_amount, loan_amount_term){
 data_preprocessed <- data %>%
   mutate(LoanAmount = LoanAmount*1000,
          CombinedIncome = ApplicantIncome + CoapplicantIncome) %>% 
-  #select(-ApplicantIncome, -CoapplicantIncome) %>% 
-  mutate(MonthlyPayment = monthly_payment(LoanAmount, Loan_Amount_Term),
-         PaymentIncomeRatio = MonthlyPayment/CombinedIncome)
+  mutate(MonthlyPayment = round(monthly_payment(LoanAmount, Loan_Amount_Term),2),
+         PaymentIncomeRatio = round(MonthlyPayment/CombinedIncome,2))
   
-glimpse(data_preprocessed)
+head(data_preprocessed)
 ```
 
 ### 1. Income and Loan Status  
@@ -63,7 +63,10 @@ data_preprocessed %>%
   ggplot(aes(x = Loan_Status, y = MedianIncome))+
   geom_col(fill = c("#F8766D", "#00BFC4"), alpha = 0.9)+
   geom_text(aes(label=MedianIncome), vjust = -0.5)+
-  theme_minimal()
+  theme_minimal()+
+  labs(title =  "Loan Status and Income",
+       x = "Loan Status",
+       y = "Meadian Income")
 ```
 
 >There is not much difference in the median income of both groups.  
@@ -74,7 +77,11 @@ Do applicants with less payment-to-income ratio more likely to be eligible for l
 library(ggplot2)
 data_preprocessed %>% 
   ggplot(aes(PaymentIncomeRatio, fill = Loan_Status))+
-  geom_density(alpha  = 0.7)
+  geom_density(alpha  = 0.7)+
+  labs(title =  "Distribution of Payment-Income Ratio According to Loan Status",
+       fill = "Loan Status",
+       x = "Payment-Income Ratio")+
+  theme_minimal()
 ```
 
 
@@ -106,7 +113,10 @@ library(ggplot2)
 data_preprocessed %>% 
   filter(ApplicantIncome < 15000) %>% 
   ggplot(aes(y = ApplicantIncome, x = Education, fill = Education))+
-  geom_boxplot(alpha = 0.5)
+  geom_boxplot(alpha = 0.7)+
+  theme_minimal()+
+  labs(title =  "Distribution of Applicant Income According to Education",
+       y = "Applicant Income")
 
 ```
 
@@ -125,7 +135,11 @@ Do self-employed applicants have lower income?
 data_preprocessed %>% 
   filter(Self_Employed != "" & ApplicantIncome < 30000) %>% 
   ggplot(aes(ApplicantIncome, fill = Self_Employed))+
-  geom_density(alpha  = 0.6)
+  geom_density(alpha  = 0.6)+
+  labs(title =  "Distribution of Applicant Income",
+       fill = "Self-employed",
+       x = "Applicant Income")+
+  theme_minimal()
 ```
 
 ```{r}
@@ -152,7 +166,10 @@ data_preprocessed %>%
   ggplot(aes(Loan_Status, MedianMonthlyPayment))+
   geom_col(fill = c("#F8766D", "#00BFC4"), alpha = 0.85)+
   geom_text(aes(label=MedianMonthlyPayment), vjust = -0.5)+
-  theme_minimal()
+  theme_minimal()+
+  labs(title =  "Loan Status and Monthly Payment",
+       x = "Loan Status",
+       y = "Median Monthly Payment")
 ```
 
 >Eligible applicants have lower median monthly payment.  
@@ -162,8 +179,12 @@ Applicants with higher number of dependents have higher income.
 ```{r warning=FALSE}
 data_preprocessed %>% 
   ggplot(aes(y = ApplicantIncome, x = Dependents, fill = factor(Dependents)))+
-  geom_boxplot(alpha = 0.5)+
-  scale_fill_brewer(palette="Set1")
+  geom_boxplot(alpha = 0.7)+
+  scale_fill_brewer(palette="Set1")+
+  theme_minimal()+
+  labs(title =  "Distribution of Applicant Income According to Number of Dependents",
+       fill = "Dependents",
+       y = "Applicant Income")
 ```
 
 ```{r}
@@ -192,7 +213,10 @@ data_preprocessed %>%
   count(Married, Dependents) %>% 
   ggplot(aes(x = Married, y = n, fill = factor(Dependents)))+
   geom_col(alpha = 0.9)+
-  theme_minimal()
+  theme_minimal()+
+  labs(title =  "Civil Status and Dependents",
+       y = "Count",
+       fill = "Dependents")
 ```
 
 >Majority of married applicants have dependents; however, married applicants who don't have dependents still hold a big percentage. Majority of unmarried applicants don't have dependents.  
@@ -209,12 +233,14 @@ data_preprocessed %>%
 
 Cluster the applicant income using kmeans clustering algorithm. The clusters are then labeled: "High Income", "Mid Income", and "Low Income".   
 ```{r}
+set.seed(123)
 ApplicantIncomeCluster <- kmeans(data_preprocessed$ApplicantIncome, 3)
 data_preprocessed$ApplicantIncomeCluster <- ApplicantIncomeCluster$cluster
 
 data_preprocessed <- data_preprocessed %>% 
-  mutate(ApplicantIncomeCluster = if_else(ApplicantIncomeCluster == 1, "High Income",
-                                          if_else(ApplicantIncomeCluster == 2, "Mid Income", "Low Income"))) %>% 
+  mutate(ApplicantIncomeCluster = case_when(ApplicantIncomeCluster  == 3 ~ "High Income",
+                                            ApplicantIncomeCluster  == 2 ~ "Mid Income",
+                                            ApplicantIncomeCluster  == 1 ~ "Low Income")) %>% 
   mutate(ApplicantIncomeCluster = ordered(ApplicantIncomeCluster, levels = c("High Income", "Mid Income", "Low Income")))
 
 ```
@@ -224,8 +250,13 @@ data_preprocessed <- data_preprocessed %>%
 ```{r}
 data_preprocessed %>% 
   ggplot(aes(y=ApplicantIncome, x=ApplicantIncomeCluster))+
-  geom_boxplot(aes(fill = ApplicantIncomeCluster), alpha = 0.4)+
-  scale_fill_brewer(palette="Set1")
+  geom_boxplot(aes(fill = ApplicantIncomeCluster), alpha = 0.7)+
+  scale_fill_brewer(palette="Set1")+
+  theme_minimal()+
+  labs(title =  "Distribution of Income According to Applicant Income Cluster",
+       y = "Applicant Income",
+       x = "Applicant Income Cluster",
+       fill = "Cluster")
 ```
 
 The graph below shows that the kmeans algorithm cleanly clustered the applicants income. 
@@ -233,7 +264,7 @@ The graph below shows that the kmeans algorithm cleanly clustered the applicants
 ```{r}
 data_preprocessed %>% 
   ggplot(aes(x=Loan_ID, y=ApplicantIncome, color = ApplicantIncomeCluster))+
-  geom_point(size = 3, alpha = 0.9)+
+  geom_point(size = 3, alpha = 0.7)+
   theme_void()+
   scale_color_brewer(palette="Set1")
 ```
@@ -243,7 +274,13 @@ data_preprocessed %>%
 data_preprocessed %>% 
   ggplot(aes(x = ApplicantIncome, y = LoanAmount, color=ApplicantIncomeCluster))+
   geom_point(alpha = 0.8, size = 3)+
-  scale_color_brewer(palette="Set1")
+  scale_color_brewer(palette="Set1")+
+  theme_minimal()+
+  labs(title = "Applicant Income vs Loan Amount",
+       color = "Cluster",
+       x = "Applicant Income",
+       y = "Loan Amount")
+  
 ```
 
 >Clusters 2 and 3 of applicant income have greater range of loan amount than cluster 1 applicants. 
@@ -261,7 +298,11 @@ data_preprocessed %>%
   ggplot(aes(Loan_Amount_Term, fill = ApplicantIncomeCluster))+
   geom_bar(stat = "count", position = "stack", alpha = 0.9)+
   scale_fill_brewer(palette="Set1")+
-  theme_minimal()
+  theme_minimal()+
+  labs(title = "Loan Amount Term and Applicant Income Cluster",
+       fill = "Cluster",
+       y = "Count",
+       x = "Loan Amount Term")
 
 ```
 
@@ -286,7 +327,10 @@ data_preprocessed %>%
   group_by(Married, WithCoapplicantIncome) %>% 
   count() %>% 
   ggplot(aes(x = Married, y = n, fill = factor(WithCoapplicantIncome)))+
-  geom_col(position = "dodge", alpha = 0.8)
+  geom_col(position = "dodge", alpha = 0.8)+
+  theme_minimal()+
+  labs(title = "Civil Status and Co-applicant",
+       subtitle = "This is an attempt to see the relationship between civil status \nand having/not having co-applicant income.")
 ```
 
 >Most married applicants have co-applicant income and most unmarried applicants don't have co-applicant income.  
@@ -304,7 +348,10 @@ data_preprocessed %>%
 data_preprocessed %>% 
   filter(Gender != "") %>% 
   ggplot(aes(y=ApplicantIncome, x=Gender, fill = Gender))+
-  geom_boxplot(alpha = 0.5)
+  geom_boxplot(alpha = 0.5)+
+  theme_minimal()+
+  labs(title = "Distribution of Applicant Income According to Gender",
+       y = "Applicant Income")
 ```
 
 >Apparently, males have slightly higher income than females and male income distribution has wider range.    
