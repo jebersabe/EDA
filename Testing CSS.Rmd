@@ -5,6 +5,8 @@ date: "30/11/2021"
 output: 
   html_document:
     css: "style.css"
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}

@@ -9,6 +9,8 @@ author: "Jake Bersabe"
 output: 
   html_document:
     css: "style.css"
+    toc: true
+    toc_float: true
 ---
 
 Import data set and libraries:   
