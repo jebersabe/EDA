@@ -48,7 +48,8 @@ data_preprocessed <- data %>%
 glimpse(data_preprocessed)
 ```
 
-### 1. Is there a difference between the median income of applicants with approved loan status and applicants with rejected loan status?   
+### 1. Income and Loan Status  
+Is there a difference between the median income of applicants with approved loan status and applicants with rejected loan status?   
 ```{r}
 data_preprocessed %>% 
   group_by(Loan_Status) %>% 
@@ -67,7 +68,8 @@ data_preprocessed %>%
 
 >There is not much difference in the median income of both groups.  
 
-### 2. Do applicants with less payment-to-income ratio more likely to be eligible for loan?  
+### 2. Payment-to-Income Ratio and Loan Status  
+Do applicants with less payment-to-income ratio more likely to be eligible for loan?  
 ```{r warning=FALSE}
 library(ggplot2)
 data_preprocessed %>% 
@@ -95,7 +97,8 @@ data_preprocessed %>%
 >There is not much difference in medians between the two groups.   
 
 
-### 3. Is there a difference in the income of applicants who graduated and those who did not?  
+### 3. Income and Education  
+Is there a difference in the income of applicants who graduated and those who did not?  
 ```{r}
 library(ggplot2)
 
@@ -116,7 +119,8 @@ data_preprocessed %>%
 
 >Graduate applicants have higher median income.  
 
-### 4. Do self-employed applicants have lower income?  
+### 4. Self-employment and Income  
+Do self-employed applicants have lower income?  
 ```{r}
 data_preprocessed %>% 
   filter(Self_Employed != "" & ApplicantIncome < 30000) %>% 
@@ -133,7 +137,8 @@ data_preprocessed %>%
 
 >Self-employed applicants actually have higher median income.  
 
-### 5. Are applicants with low monthly payment are more likely to be eligible for loan?   
+### 5. Monthly Payment and Loan Status  
+Are applicants with low monthly payment are more likely to be eligible for loan?   
 ```{r}
 data_preprocessed %>% 
   group_by(Loan_Status) %>% 
@@ -152,7 +157,8 @@ data_preprocessed %>%
 
 >Eligible applicants have lower median monthly payment.  
 
-### 6. Applicants with higher number of dependents have higher income.   
+### 6. Dependents and Income  
+Applicants with higher number of dependents have higher income.   
 ```{r warning=FALSE}
 data_preprocessed %>% 
   ggplot(aes(y = ApplicantIncome, x = Dependents, fill = factor(Dependents)))+
@@ -170,7 +176,8 @@ data_preprocessed %>%
 >Applicants with 3 or more dependents have the highest median applicant income.  
 
 
-### 7. How many applicants who are married have dependents?   
+### 7. Civil Status and Dependents  
+How many applicants who are married have dependents?   
 ```{r}
 data_preprocessed %>% 
   filter(Married != "" & Dependents != "") %>% 
@@ -244,7 +251,8 @@ data_preprocessed %>%
 
 
 
-### 9. Applicants with higher income pay the loan in shorter term
+### 9. Income and Loan Term  
+Applicants with higher income pay the loan in shorter term.  
 ```{r warning=FALSE}
 data_preprocessed %>% 
   filter(!is.na(Loan_Amount_Term)) %>% 
@@ -269,7 +277,8 @@ data_preprocessed %>%
 
 >360-month is the favorite loan amoun term across all income clusters.  
 
-### 10. Are most of the applicants with zero co-applicant income unmarried?  
+### 10. Co-applicant Income and Civil Status  
+Are most of the applicants with zero co-applicant income unmarried?  
 ```{r}
 data_preprocessed %>% 
   filter(Married != "") %>% 
@@ -282,7 +291,8 @@ data_preprocessed %>%
 
 >Most married applicants have co-applicant income and most unmarried applicants don't have co-applicant income.  
 
-### 11. Do male applicants have higher income than female applicants?  
+### 11. Gender and Income  
+Do male applicants have higher income than female applicants?  
 ```{r}
 data_preprocessed %>% 
   filter(Gender != "") %>% 

@@ -532,8 +532,9 @@ glimpse(data_preprocessed)</code></pre>
 ## $ CombinedIncome     &lt;dbl&gt; 5849, 6091, 3000, 4941, 6000, 9613, 3849, 5540, 553~
 ## $ MonthlyPayment     &lt;dbl&gt; NA, 767.4247, 395.7033, 719.4606, 845.3662, 1600.79~
 ## $ PaymentIncomeRatio &lt;dbl&gt; NA, 0.12599321, 0.13190112, 0.14561033, 0.14089437,~</code></pre>
-<div id="is-there-a-difference-between-the-median-income-of-applicants-with-approved-loan-status-and-applicants-with-rejected-loan-status" class="section level3">
-<h3>1. Is there a difference between the median income of applicants with approved loan status and applicants with rejected loan status?</h3>
+<div id="income-and-loan-status" class="section level3">
+<h3>1. Income and Loan Status</h3>
+<p>Is there a difference between the median income of applicants with approved loan status and applicants with rejected loan status?</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   group_by(Loan_Status) %&gt;% 
   summarise(Count = n(), MedianIncome = median(ApplicantIncome))</code></pre>
@@ -570,8 +571,9 @@ glimpse(data_preprocessed)</code></pre>
 <p>There is not much difference in the median income of both groups.</p>
 </blockquote>
 </div>
-<div id="do-applicants-with-less-payment-to-income-ratio-more-likely-to-be-eligible-for-loan" class="section level3">
-<h3>2. Do applicants with less payment-to-income ratio more likely to be eligible for loan?</h3>
+<div id="payment-to-income-ratio-and-loan-status" class="section level3">
+<h3>2. Payment-to-Income Ratio and Loan Status</h3>
+<p>Do applicants with less payment-to-income ratio more likely to be eligible for loan?</p>
 <pre class="r"><code>library(ggplot2)
 data_preprocessed %&gt;% 
   ggplot(aes(PaymentIncomeRatio, fill = Loan_Status))+
@@ -634,8 +636,9 @@ data_preprocessed %&gt;%
 <p>There is not much difference in medians between the two groups.</p>
 </blockquote>
 </div>
-<div id="is-there-a-difference-in-the-income-of-applicants-who-graduated-and-those-who-did-not" class="section level3">
-<h3>3. Is there a difference in the income of applicants who graduated and those who did not?</h3>
+<div id="income-and-education" class="section level3">
+<h3>3. Income and Education</h3>
+<p>Is there a difference in the income of applicants who graduated and those who did not?</p>
 <pre class="r"><code>library(ggplot2)
 
 # Filtering values greater than 15000 to remove zoom of the outliers and zoom in on the distribution
@@ -669,8 +672,9 @@ data_preprocessed %&gt;%
 <p>Graduate applicants have higher median income.</p>
 </blockquote>
 </div>
-<div id="do-self-employed-applicants-have-lower-income" class="section level3">
-<h3>4. Do self-employed applicants have lower income?</h3>
+<div id="self-employment-and-income" class="section level3">
+<h3>4. Self-employment and Income</h3>
+<p>Do self-employed applicants have lower income?</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   filter(Self_Employed != &quot;&quot; &amp; ApplicantIncome &lt; 30000) %&gt;% 
   ggplot(aes(ApplicantIncome, fill = Self_Employed))+
@@ -705,8 +709,9 @@ data_preprocessed %&gt;%
 <p>Self-employed applicants actually have higher median income.</p>
 </blockquote>
 </div>
-<div id="are-applicants-with-low-monthly-payment-are-more-likely-to-be-eligible-for-loan" class="section level3">
-<h3>5. Are applicants with low monthly payment are more likely to be eligible for loan?</h3>
+<div id="monthly-payment-and-loan-status" class="section level3">
+<h3>5. Monthly Payment and Loan Status</h3>
+<p>Are applicants with low monthly payment are more likely to be eligible for loan?</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   group_by(Loan_Status) %&gt;% 
   summarise(Count = n(), MedianMonthlyPayment = median(MonthlyPayment, na.rm = T))</code></pre>
@@ -743,8 +748,9 @@ data_preprocessed %&gt;%
 <p>Eligible applicants have lower median monthly payment.</p>
 </blockquote>
 </div>
-<div id="applicants-with-higher-number-of-dependents-have-higher-income." class="section level3">
-<h3>6. Applicants with higher number of dependents have higher income.</h3>
+<div id="dependents-and-income" class="section level3">
+<h3>6. Dependents and Income</h3>
+<p>Applicants with higher number of dependents have higher income.</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   ggplot(aes(y = ApplicantIncome, x = Dependents, fill = factor(Dependents)))+
   geom_boxplot(alpha = 0.5)+
@@ -789,8 +795,9 @@ data_preprocessed %&gt;%
 <p>Applicants with 3 or more dependents have the highest median applicant income.</p>
 </blockquote>
 </div>
-<div id="how-many-applicants-who-are-married-have-dependents" class="section level3">
-<h3>7. How many applicants who are married have dependents?</h3>
+<div id="civil-status-and-dependents" class="section level3">
+<h3>7. Civil Status and Dependents</h3>
+<p>How many applicants who are married have dependents?</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   filter(Married != &quot;&quot; &amp; Dependents != &quot;&quot;) %&gt;% 
   mutate(Dependents = if_else(Dependents &gt; 0, 1,  0)) %&gt;% 
@@ -898,8 +905,9 @@ data_preprocessed &lt;- data_preprocessed %&gt;%
 <p>Clusters 2 and 3 of applicant income have greater range of loan amount than cluster 1 applicants.</p>
 </blockquote>
 </div>
-<div id="applicants-with-higher-income-pay-the-loan-in-shorter-term" class="section level3">
-<h3>9. Applicants with higher income pay the loan in shorter term</h3>
+<div id="income-and-loan-term" class="section level3">
+<h3>9. Income and Loan Term</h3>
+<p>Applicants with higher income pay the loan in shorter term.</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   filter(!is.na(Loan_Amount_Term)) %&gt;% 
   mutate(Loan_Amount_Term = forcats::fct_lump_n(factor(Loan_Amount_Term), 4)) %&gt;% 
@@ -936,8 +944,9 @@ data_preprocessed &lt;- data_preprocessed %&gt;%
 <p>360-month is the favorite loan amoun term across all income clusters.</p>
 </blockquote>
 </div>
-<div id="are-most-of-the-applicants-with-zero-co-applicant-income-unmarried" class="section level3">
-<h3>10. Are most of the applicants with zero co-applicant income unmarried?</h3>
+<div id="co-applicant-income-and-civil-status" class="section level3">
+<h3>10. Co-applicant Income and Civil Status</h3>
+<p>Are most of the applicants with zero co-applicant income unmarried?</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   filter(Married != &quot;&quot;) %&gt;% 
   mutate(WithCoapplicantIncome = if_else(CoapplicantIncome &gt; 0, 1, 0)) %&gt;% 
@@ -950,8 +959,9 @@ data_preprocessed &lt;- data_preprocessed %&gt;%
 <p>Most married applicants have co-applicant income and most unmarried applicants don’t have co-applicant income.</p>
 </blockquote>
 </div>
-<div id="do-male-applicants-have-higher-income-than-female-applicants" class="section level3">
-<h3>11. Do male applicants have higher income than female applicants?</h3>
+<div id="gender-and-income" class="section level3">
+<h3>11. Gender and Income</h3>
+<p>Do male applicants have higher income than female applicants?</p>
 <pre class="r"><code>data_preprocessed %&gt;% 
   filter(Gender != &quot;&quot;) %&gt;% 
   group_by(Gender) %&gt;% 
