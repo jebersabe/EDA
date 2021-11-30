@@ -6,15 +6,17 @@ knit: (function(input_file, encoding) {
  encoding=encoding,
  output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 author: "Jake Bersabe"
-date: "15/11/2021"
-output: html_document
+output: 
+  html_document:
+    css: "style.css"
 ---
 
 Import data set and libraries:   
-```{r message=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(dplyr)
 library(skimr)
 library(ggplot2)
+library(printr)
 
 data <- readr::read_csv("train.csv")
 glimpse(data)
