@@ -13,7 +13,13 @@ output:
     toc_float: true
 ---
 
-### Import data set and libraries   
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = F, warning = F, fig.align = 'center')
+```
+
+
+### Import data set and libraries
+
 ```{r message=FALSE, warning=FALSE}
 library(dplyr) 
 library(skimr) 
@@ -24,9 +30,10 @@ data <- readr::read_csv("train.csv")
 glimpse(data)
 skim(data)
 ```
-We have a total of 614 records and 13 columns. We also have some missing values and the numeric variables are not distributed normally.   
 
-Let's add some columns which banks use to evaluate the eligibility of loan applicants.  
+We have a total of 614 records and 13 columns. We also have some missing values and the numeric variables are not distributed normally.
+
+Let's add some columns which banks use to evaluate the eligibility of loan applicants.
 
 ```{r}
 
@@ -48,8 +55,10 @@ data_preprocessed <- data %>%
 head(data_preprocessed)
 ```
 
-### 1. Income and Loan Status  
-Is there a difference between the median income of applicants with approved loan status and applicants with rejected loan status?   
+### 1. Income and Loan Status
+
+Is there a difference between the median income of applicants with approved loan status and applicants with rejected loan status?
+
 ```{r}
 data_preprocessed %>% 
   group_by(Loan_Status) %>% 
@@ -69,10 +78,12 @@ data_preprocessed %>%
        y = "Meadian Income")
 ```
 
->There is not much difference in the median income of both groups.  
+> There is not much difference in the median income of both groups.
 
-### 2. Payment-to-Income Ratio and Loan Status  
-Do applicants with less payment-to-income ratio more likely to be eligible for loan?  
+### 2. Payment-to-Income Ratio and Loan Status
+
+Do applicants with less payment-to-income ratio more likely to be eligible for loan?
+
 ```{r warning=FALSE}
 library(ggplot2)
 data_preprocessed %>% 
@@ -84,7 +95,6 @@ data_preprocessed %>%
   theme_minimal()
 ```
 
-
 ```{r}
 data_preprocessed %>% 
   filter(PaymentIncomeRatio != "") %>% 
@@ -92,7 +102,7 @@ data_preprocessed %>%
   summarise(Count = n(), MeanPayIncomeRatio = mean(PaymentIncomeRatio, na.rm=T))
 ```
 
->Eligible applicants have lower mean of payment-to-income ratio; however, this is not accurate since there are outliers in the data. Median would be the more appropriate measurement to use.  
+> Eligible applicants have lower mean of payment-to-income ratio; however, this is not accurate since there are outliers in the data. Median would be the more appropriate measurement to use.
 
 ```{r}
 data_preprocessed %>% 
@@ -101,11 +111,12 @@ data_preprocessed %>%
   summarise(Count = n(), MedianPayIncomeRatio = median(PaymentIncomeRatio, na.rm=T))
 ```
 
->There is not much difference in medians between the two groups.   
+> There is not much difference in medians between the two groups.
 
+### 3. Income and Education
 
-### 3. Income and Education  
-Is there a difference in the income of applicants who graduated and those who did not?  
+Is there a difference in the income of applicants who graduated and those who did not?
+
 ```{r}
 library(ggplot2)
 
@@ -126,11 +137,12 @@ data_preprocessed %>%
   summarise(MedianApplicantIncome = median(ApplicantIncome))
 ```
 
+> Graduate applicants have higher median income.
 
->Graduate applicants have higher median income.  
+### 4. Self-employment and Income
 
-### 4. Self-employment and Income  
-Do self-employed applicants have lower income?  
+Do self-employed applicants have lower income?
+
 ```{r}
 data_preprocessed %>% 
   filter(Self_Employed != "" & ApplicantIncome < 30000) %>% 
@@ -149,10 +161,12 @@ data_preprocessed %>%
   summarise(Count = n(), MedianApplicantIncome = median(ApplicantIncome))
 ```
 
->Self-employed applicants actually have higher median income.  
+> Self-employed applicants actually have higher median income.
 
-### 5. Monthly Payment and Loan Status  
-Are applicants with low monthly payment are more likely to be eligible for loan?   
+### 5. Monthly Payment and Loan Status
+
+Are applicants with low monthly payment are more likely to be eligible for loan?
+
 ```{r}
 data_preprocessed %>% 
   group_by(Loan_Status) %>% 
@@ -172,10 +186,12 @@ data_preprocessed %>%
        y = "Median Monthly Payment")
 ```
 
->Eligible applicants have lower median monthly payment.  
+> Eligible applicants have lower median monthly payment.
 
-### 6. Dependents and Income  
-Applicants with higher number of dependents have higher income.   
+### 6. Dependents and Income
+
+Applicants with higher number of dependents have higher income.
+
 ```{r warning=FALSE}
 data_preprocessed %>% 
   ggplot(aes(y = ApplicantIncome, x = Dependents, fill = factor(Dependents)))+
@@ -194,11 +210,12 @@ data_preprocessed %>%
   summarise(Count = n(), MedianApplicantIncome = median(ApplicantIncome))
 ```
 
->Applicants with 3 or more dependents have the highest median applicant income.  
+> Applicants with 3 or more dependents have the highest median applicant income.
 
+### 7. Civil Status and Dependents
 
-### 7. Civil Status and Dependents  
-How many applicants who are married have dependents?   
+How many applicants who are married have dependents?
+
 ```{r}
 data_preprocessed %>% 
   filter(Married != "" & Dependents != "") %>% 
@@ -219,7 +236,7 @@ data_preprocessed %>%
        fill = "Dependents")
 ```
 
->Majority of married applicants have dependents; however, married applicants who don't have dependents still hold a big percentage. Majority of unmarried applicants don't have dependents.  
+> Majority of married applicants have dependents; however, married applicants who don't have dependents still hold a big percentage. Majority of unmarried applicants don't have dependents.
 
 ```{r}
 data_preprocessed %>% 
@@ -229,9 +246,10 @@ data_preprocessed %>%
   mutate(Percentage = round(n*100/sum(n),1))
 ```
 
-### 8. Loan Amount and Applicant Income  
+### 8. Loan Amount and Applicant Income
 
-Cluster the applicant income using kmeans clustering algorithm. The clusters are then labeled: "High Income", "Mid Income", and "Low Income".   
+Cluster the applicant income using kmeans clustering algorithm. The clusters are then labeled: "High Income", "Mid Income", and "Low Income".
+
 ```{r}
 set.seed(123)
 ApplicantIncomeCluster <- kmeans(data_preprocessed$ApplicantIncome, 3)
@@ -245,8 +263,6 @@ data_preprocessed <- data_preprocessed %>%
 
 ```
 
-
-
 ```{r}
 data_preprocessed %>% 
   ggplot(aes(y=ApplicantIncome, x=ApplicantIncomeCluster))+
@@ -259,7 +275,7 @@ data_preprocessed %>%
        fill = "Cluster")
 ```
 
-The graph below shows that the kmeans algorithm cleanly clustered the applicants income. 
+The graph below shows that the kmeans algorithm cleanly clustered the applicants income.
 
 ```{r}
 data_preprocessed %>% 
@@ -268,7 +284,6 @@ data_preprocessed %>%
   theme_void()+
   scale_color_brewer(palette="Set1")
 ```
-
 
 ```{r warning=F}
 data_preprocessed %>% 
@@ -283,13 +298,12 @@ data_preprocessed %>%
   
 ```
 
->Clusters 2 and 3 of applicant income have greater range of loan amount than cluster 1 applicants. 
+> Clusters 2 and 3 of applicant income have greater range of loan amount than cluster 1 applicants.
 
+### 9. Income and Loan Term
 
+Applicants with higher income pay the loan in shorter term.
 
-
-### 9. Income and Loan Term  
-Applicants with higher income pay the loan in shorter term.  
 ```{r warning=FALSE}
 data_preprocessed %>% 
   filter(!is.na(Loan_Amount_Term)) %>% 
@@ -315,11 +329,12 @@ data_preprocessed %>%
   arrange(Loan_Amount_Term)
 ```
 
+> 360-month is the favorite loan amoun term across all income clusters.
 
->360-month is the favorite loan amoun term across all income clusters.  
+### 10. Co-applicant Income and Civil Status
 
-### 10. Co-applicant Income and Civil Status  
-Are most of the applicants with zero co-applicant income unmarried?  
+Are most of the applicants with zero co-applicant income unmarried?
+
 ```{r}
 data_preprocessed %>% 
   filter(Married != "") %>% 
@@ -333,10 +348,12 @@ data_preprocessed %>%
        subtitle = "This is an attempt to see the relationship between civil status \nand having/not having co-applicant income.")
 ```
 
->Most married applicants have co-applicant income and most unmarried applicants don't have co-applicant income.  
+> Most married applicants have co-applicant income and most unmarried applicants don't have co-applicant income.
 
-### 11. Gender and Income  
-Do male applicants have higher income than female applicants?  
+### 11. Gender and Income
+
+Do male applicants have higher income than female applicants?
+
 ```{r}
 data_preprocessed %>% 
   filter(Gender != "") %>% 
@@ -354,6 +371,4 @@ data_preprocessed %>%
        y = "Applicant Income")
 ```
 
->Apparently, males have slightly higher income than females and male income distribution has wider range.    
-
-
+> Apparently, males have slightly higher income than females and male income distribution has wider range.
